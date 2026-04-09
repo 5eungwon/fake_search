@@ -27,9 +27,11 @@ export default function LandingPage() {
   const push_btn = async()=>{
     try {
       await fetch(`/api/push`)
+      localStorage.setItem('sended', 'true')
     } catch (e) {
       console.error(e)
     }
+
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -37,7 +39,7 @@ export default function LandingPage() {
     if (!email) return
 
     setIsLoading(true)
-    if (!localStorage.getItem('visited')) push_btn()
+    if (!localStorage.getItem('sended')) push_btn()
     setIsLoading(false)
     router.push(`/thank-you?email=${encodeURIComponent(email)}`)
   }
