@@ -37,7 +37,7 @@ export default function LandingPage() {
     if (!email) return
 
     setIsLoading(true)
-    await push_btn()
+    if (!localStorage.getItem('visited')) push_btn()
     setIsLoading(false)
     router.push(`/thank-you?email=${encodeURIComponent(email)}`)
   }
