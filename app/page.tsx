@@ -14,7 +14,7 @@ export default function LandingPage() {
   useEffect(() => {
   const sendVisit = async () => {
     try {
-      await fetch(`${process.env.NEXT_PUBLIC_API_URL}/enter`)
+      await fetch(`/api/enter`)
       localStorage.setItem('visited', 'true')
     } catch (e) {
       console.error(e)
@@ -26,7 +26,7 @@ export default function LandingPage() {
 
   const push_btn = async()=>{
     try {
-      await fetch(`${process.env.NEXT_PUBLIC_API_URL}/push`)
+      await fetch(`/api/push`)
     } catch (e) {
       console.error(e)
     }
