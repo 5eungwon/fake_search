@@ -26,12 +26,30 @@ export default function LandingPage() {
 
   const push_btn = async()=>{
     try {
-      await fetch(`/api/push`)
+      await fetch(`/api/finish`)
       localStorage.setItem('sended', 'true')
     } catch (e) {
       console.error(e)
     }
 
+  }
+
+  const push_start = async()=>{
+    try {
+      await fetch(`/api/push`)
+      localStorage.setItem('pushed', 'true')
+    } catch (e) {
+      console.error(e)
+    }
+
+  }
+
+  const handleSubmit_start = async (e: React.FormEvent) => {
+
+    setIsLoading(true)
+    if (!localStorage.getItem('pushed')) push_start()
+    setIsLoading(false)
+    router.push(`/demo`)
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -87,12 +105,12 @@ export default function LandingPage() {
             당근마켓, 번개장터, 중고나라. 하나의 폼으로 작성하면 모든 플랫폼에 자동으로 등록됩니다. 더 이상 같은 글을 여러 번 쓰지 마세요.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <a href="#waitlist">
-              <Button size="lg" className="w-full sm:w-auto gap-2 bg-gradient-to-r from-primary to-chart-5 hover:opacity-90 shadow-xl shadow-primary/25 text-base px-8">
-                사전 등록하기
+            
+              <Button onClick={handleSubmit_start}size="lg" className="w-full sm:w-auto gap-2 bg-gradient-to-r from-primary to-chart-5 hover:opacity-90 shadow-xl shadow-primary/25 text-base px-8">
+                서비스 사용해보기
                 <ArrowRight className="w-4 h-4" />
               </Button>
-            </a>
+            
             <a href="#features">
               <Button size="lg" variant="outline" className="w-full sm:w-auto text-base px-8 border-2">
                 자세히 보기
