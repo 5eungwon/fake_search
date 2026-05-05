@@ -1,32 +1,13 @@
 import type { Metadata } from 'next'
-import { Geist, Geist_Mono } from 'next/font/google'
+import { Geist } from 'next/font/google'
 import { Analytics } from '@vercel/analytics/next'
 import './globals.css'
 
-const _geist = Geist({ subsets: ["latin"] });
-const _geistMono = Geist_Mono({ subsets: ["latin"] });
+const geist = Geist({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
-  title: '올인원 - 중고거래 한 번에 올리기',
-  description: '하나의 폼으로 당근마켓, 번개장터, 중고나라까지. 중고거래 글을 한 번에 여러 플랫폼에 등록하세요.',
-  generator: 'v0.app',
-  icons: {
-    icon: [
-      {
-        url: '/icon-light-32x32.png',
-        media: '(prefers-color-scheme: light)',
-      },
-      {
-        url: '/icon-dark-32x32.png',
-        media: '(prefers-color-scheme: dark)',
-      },
-      {
-        url: '/icon.svg',
-        type: 'image/svg+xml',
-      },
-    ],
-    apple: '/apple-icon.png',
-  },
+  title: 'FitView - 맞춤형 면접 역량 강화 서비스',
+  description: 'AI로 반복 연습하고, 필요할 때 전문가로 마무리하는 면접 준비의 새로운 표준. 취준생과 이직 준비 직장인을 위한 AI 면접 코칭 플랫폼.',
 }
 
 export default function RootLayout({
@@ -36,7 +17,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="ko">
-      <body className="font-sans antialiased">
+      <body className={`${geist.className} antialiased`}>
         {children}
         {process.env.NODE_ENV === 'production' && <Analytics />}
       </body>
