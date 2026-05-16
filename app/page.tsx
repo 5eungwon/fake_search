@@ -11,15 +11,7 @@ export default function LandingPage() {
   }, [])
 
   return (
-    <div style={{ fontFamily: 'Geist, system-ui, sans-serif', color: '#1a1a2e', position: 'relative', overflow: 'hidden' }}>
-      {/* BACKGROUND BLUR BLOBS */}
-      <div style={{ position: 'fixed', inset: 0, zIndex: 0, pointerEvents: 'none', overflow: 'hidden' }}>
-        <div style={{ position: 'absolute', top: '-10%', left: '-5%', width: 600, height: 600, borderRadius: '50%', background: 'radial-gradient(circle, rgba(39,86,239,0.18) 0%, transparent 70%)', filter: 'blur(60px)' }} />
-        <div style={{ position: 'absolute', top: '30%', right: '-8%', width: 500, height: 500, borderRadius: '50%', background: 'radial-gradient(circle, rgba(100,149,255,0.15) 0%, transparent 70%)', filter: 'blur(70px)' }} />
-        <div style={{ position: 'absolute', top: '60%', left: '10%', width: 400, height: 400, borderRadius: '50%', background: 'radial-gradient(circle, rgba(39,86,239,0.1) 0%, transparent 70%)', filter: 'blur(80px)' }} />
-        <div style={{ position: 'absolute', bottom: '5%', right: '15%', width: 450, height: 450, borderRadius: '50%', background: 'radial-gradient(circle, rgba(120,160,255,0.12) 0%, transparent 70%)', filter: 'blur(60px)' }} />
-      </div>
-      <div style={{ position: 'relative', zIndex: 1 }}>
+    <div style={{ fontFamily: 'Geist, system-ui, sans-serif', color: '#1a1a2e' }}>
       {/* NAV */}
       <nav style={{ backgroundColor: BLUE, position: 'sticky', top: 0, zIndex: 50 }}>
         <div style={{ maxWidth: 1100, margin: '0 auto', padding: '0 24px', height: 64, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
@@ -36,14 +28,14 @@ export default function LandingPage() {
       <section style={{ backgroundColor: BLUE, padding: '80px 24px 96px', textAlign: 'center' }}>
         <div style={{ maxWidth: 780, margin: '0 auto' }}>
           <div style={{ display: 'inline-block', backgroundColor: 'rgba(255,255,255,0.2)', color: '#fff', fontSize: 13, fontWeight: 600, padding: '6px 16px', borderRadius: 999, marginBottom: 24 }}>
-            은퇴 전문가 1:1 면접 컨설팅 서비스
+            맞춤형 면접 역량 강화 서비스
           </div>
           <h1 style={{ color: '#fff', fontSize: 'clamp(36px, 6vw, 60px)', fontWeight: 900, lineHeight: 1.15, marginBottom: 24, letterSpacing: '-1px' }}>
-            면접 준비, 이제는<br />경험 많은 전문가와 함께
+            AI로 반복 연습하고,<br />필요할 때 전문가로 마무리
           </h1>
           <p style={{ color: 'rgba(255,255,255,0.85)', fontSize: 18, lineHeight: 1.7, marginBottom: 40, maxWidth: 560, margin: '0 auto 40px' }}>
-            수십 년 현장 경험을 가진 은퇴 전문가와의 1:1 모의면접.<br />
-            학원 대비 1/5 가격으로, 촉박한 일정에도 유연하게.
+            기업·직무 맞춤 AI 면접 + 현직자 전문가 매칭.<br />
+            학원 대비 1/10 가격으로 실전 역량을 완성하세요.
           </p>
           <div style={{ display: 'flex', gap: 16, justifyContent: 'center', flexWrap: 'wrap' }}>
             <Link href="/coupon">
@@ -106,29 +98,29 @@ export default function LandingPage() {
           <div style={{ textAlign: 'center', marginBottom: 56 }}>
             <span style={{ color: 'rgba(255,255,255,0.7)', fontWeight: 700, fontSize: 13, letterSpacing: 1, textTransform: 'uppercase' }}>솔루션</span>
             <h2 style={{ color: '#fff', fontSize: 'clamp(28px, 4vw, 40px)', fontWeight: 900, marginTop: 12 }}>
-              FitView가 제시하는 답
+              면접 준비의 새로운 표준
             </h2>
-            <p style={{ color: 'rgba(255,255,255,0.8)', fontSize: 17, marginTop: 12 }}>검증된 전문가의 경험, 합리적인 가격, 유연한 일정으로 완성하세요</p>
+            <p style={{ color: 'rgba(255,255,255,0.8)', fontSize: 17, marginTop: 12 }}>AI로 반복하고, 전문가로 마무리하고, 공간으로 완성하세요</p>
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 24 }}>
             {[
               {
-                icon: '💼',
-                title: '은퇴 전문가 1:1 매칭',
-                subtitle: '수십 년 경험이 만드는 진짜 피드백',
-                items: ['면접관·HR 출신 은퇴 전문가 직접 연결', '업계 맞춤 심층 피드백 제공', '학원 대비 1/5~1/10 합리적인 가격'],
+                icon: '🤖',
+                title: 'AI 기반 면접 연습',
+                subtitle: '상시 연습할 수 있는 환경',
+                items: ['기업·직무 맞춤 질문 생성', '시공간 제약 없는 면접 환경', '논리 구조·답변 전략 딥 피드백'],
               },
               {
-                icon: '📅',
-                title: '유연한 일정 매칭',
-                subtitle: '촉박한 일정에도 걱정 없이',
-                items: ['은퇴 전문가의 풍부한 시간적 여유', '면접 전날도 즉시 예약 가능', '현직자 대비 월등한 스케줄 유연성'],
+                icon: '👤',
+                title: '선택적 전문가 매칭',
+                subtitle: '사용자의 부족한 능력에 맞는 전문가',
+                items: ['AI 진단 기반 현직자 매칭', '실전 감각과 업계 시각 반영', '압박 대응 심화 피드백'],
               },
               {
                 icon: '🏢',
-                title: '온·오프라인 선택',
-                subtitle: '원하는 방식으로 준비하세요',
-                items: ['Zoom 화상 모의면접 기본 제공', '오프라인 공간 대여 옵션', '실제 면접장 현장감 재현'],
+                title: '오프라인 공간 대여',
+                subtitle: '대면 모의 면접을 위한 공간',
+                items: ['스터디카페·회의실 연결', '실제 면접 환경 재현', '대면 희망자 전용 옵션'],
               },
             ].map((s) => (
               <div key={s.title} style={{ backgroundColor: 'rgba(255,255,255,0.12)', borderRadius: 16, padding: 32, border: '1px solid rgba(255,255,255,0.2)' }}>
@@ -148,31 +140,8 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* STORY */}
-      <section style={{ backgroundColor: '#fff', padding: '72px 24px' }}>
-        <div style={{ maxWidth: 720, margin: '0 auto', textAlign: 'center' }}>
-          <span style={{ color: BLUE, fontWeight: 700, fontSize: 13, letterSpacing: 1, textTransform: 'uppercase' }}>기획 배경</span>
-          <h2 style={{ fontSize: 'clamp(24px, 3.5vw, 36px)', fontWeight: 900, marginTop: 12, letterSpacing: '-0.5px' }}>
-            아직 초기 창업팀이지만,<br />진짜 문제를 해결하고 싶습니다
-          </h2>
-          <p style={{ color: '#555', fontSize: 16, lineHeight: 1.9, marginTop: 24 }}>
-            취업 준비를 하면서 느꼈습니다. 전문가의 피드백을 받고 싶어도 1회 비용이 너무 높고,
-            스터디에 의존하다 보면 피드백 품질이 들쭉날쭉합니다.
-            <br /><br />
-            FitView는 현직에서 은퇴한 면접관, HR 담당자, 현장 전문가들과 취준생을 연결하는 플랫폼입니다.
-            전문가는 은퇴 후에도 경험을 나누고, 취준생은 합리적인 가격에 양질의 피드백을 받을 수 있습니다.
-            <br /><br />
-            <strong>2026년 하반기 출시를 목표로 준비 중입니다.</strong> 지금 얼리버드 쿠폰을 받으시면
-            출시 즉시 적용되는 특별 혜택을 드립니다.
-          </p>
-          <div style={{ display: 'inline-block', backgroundColor: '#f0f4ff', borderRadius: 12, padding: '14px 28px', marginTop: 32, border: '1px solid #d0d8ff' }}>
-            <span style={{ color: BLUE, fontWeight: 700, fontSize: 14 }}>KHUGLE 팀 · 2026년 하반기 출시 예정</span>
-          </div>
-        </div>
-      </section>
-
       {/* COMPARISON */}
-      <section style={{ backgroundColor: '#f8f9ff', padding: '80px 24px' }}>
+      <section style={{ backgroundColor: '#fff', padding: '80px 24px' }}>
         <div style={{ maxWidth: 860, margin: '0 auto' }}>
           <div style={{ textAlign: 'center', marginBottom: 56 }}>
             <span style={{ color: BLUE, fontWeight: 700, fontSize: 13, letterSpacing: 1, textTransform: 'uppercase' }}>경쟁우위</span>
@@ -189,10 +158,10 @@ export default function LandingPage() {
               </thead>
               <tbody>
                 {[
-                  ['피드백 품질', '역량 편차로 품질 들쭉날쭉', '검증된 은퇴 전문가 1:1 피드백'],
-                  ['일정 유연성', '현직자로 일정 조율 어려움', '촉박한 일정에도 유연한 매칭'],
-                  ['면접 현장감', '온라인으로만 진행', '오프라인 대면 면접 옵션 제공'],
-                  ['비용', '1회 10~30만원, 반복 부담', '1회 3~6만원, 학원 대비 1/5'],
+                  ['피드백 품질', '구성원 역량 차이로 편차 큼', '선택적 전문가 매칭 시스템'],
+                  ['현장감', '현장 재현성 부족', '공간 대여 서비스 제공'],
+                  ['피드백 깊이', '표면적 조언에 그침', '온·오프라인 대면 모의 면접'],
+                  ['비용', '1회 10~100만원, 반복 불가', 'AI 무제한 월 9,900원'],
                 ].map(([label, before, after], i) => (
                   <tr key={label} style={{ borderTop: '1px solid #e5e7eb', backgroundColor: i % 2 === 0 ? '#fff' : '#fafafa' }}>
                     <td style={{ padding: '18px 24px', fontWeight: 600, fontSize: 15 }}>{label}</td>
@@ -207,99 +176,80 @@ export default function LandingPage() {
       </section>
 
       {/* PRICING */}
-      <section style={{ backgroundColor: '#fff', padding: '80px 24px' }}>
-        <div style={{ maxWidth: 860, margin: '0 auto' }}>
+      <section style={{ backgroundColor: '#f8f9ff', padding: '80px 24px' }}>
+        <div style={{ maxWidth: 1000, margin: '0 auto' }}>
           <div style={{ textAlign: 'center', marginBottom: 56 }}>
-            <span style={{ color: BLUE, fontWeight: 700, fontSize: 13, letterSpacing: 1, textTransform: 'uppercase' }}>얼리버드 쿠폰</span>
-            <h2 style={{ fontSize: 'clamp(28px, 4vw, 40px)', fontWeight: 900, marginTop: 12 }}>지금 바로 쿠폰을 받으세요</h2>
-            <p style={{ color: '#666', fontSize: 17, marginTop: 12 }}>서비스 출시 전 얼리버드 전용 할인 혜택</p>
+            <span style={{ color: BLUE, fontWeight: 700, fontSize: 13, letterSpacing: 1, textTransform: 'uppercase' }}>가격</span>
+            <h2 style={{ fontSize: 'clamp(28px, 4vw, 40px)', fontWeight: 900, marginTop: 12 }}>학원 대비 1/10~1/30 가격</h2>
+            <p style={{ color: '#666', fontSize: 17, marginTop: 12 }}>반복 연습이 가능한 가격 구조</p>
           </div>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: 24 }}>
-
-            {/* 쿠폰 1 */}
-            <div style={{ backgroundColor: '#fff', borderRadius: 20, overflow: 'hidden', boxShadow: '0 8px 40px rgba(39,86,239,0.15)', border: '2px solid #e5e9ff' }}>
-              <div style={{ backgroundColor: BLUE, padding: '28px 28px 24px', position: 'relative' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                  <div>
-                    <span style={{ backgroundColor: 'rgba(255,255,255,0.2)', color: '#fff', fontSize: 11, fontWeight: 700, padding: '3px 10px', borderRadius: 4, letterSpacing: 0.5 }}>쿠폰 #1</span>
-                    <h3 style={{ color: '#fff', fontWeight: 900, fontSize: 22, marginTop: 10, lineHeight: 1.2 }}>첫 세션<br />얼리버드 쿠폰</h3>
-                  </div>
-                  <div style={{ textAlign: 'right' }}>
-                    <div style={{ color: 'rgba(255,255,255,0.6)', fontSize: 12, textDecoration: 'line-through' }}>정가</div>
-                    <div style={{ color: '#FFD700', fontWeight: 900, fontSize: 32, lineHeight: 1 }}>50%</div>
-                    <div style={{ color: 'rgba(255,255,255,0.8)', fontSize: 12 }}>할인</div>
-                  </div>
-                </div>
-                <div style={{ position: 'absolute', bottom: -1, left: 0, right: 0, height: 20, backgroundColor: '#fff' }}>
-                  <div style={{ position: 'absolute', top: -10, left: 20, width: 20, height: 20, borderRadius: '50%', backgroundColor: '#fff' }} />
-                  <div style={{ position: 'absolute', top: -10, right: 20, width: 20, height: 20, borderRadius: '50%', backgroundColor: '#fff' }} />
-                  <div style={{ borderTop: '2px dashed #c7d2fe', margin: '10px 40px 0' }} />
-                </div>
-              </div>
-              <div style={{ padding: '28px 28px 24px' }}>
-                <ul style={{ listStyle: 'none', padding: 0, margin: '0 0 24px' }}>
-                  {[
-                    '첫 컨설팅 세션 50% 할인',
-                    '은퇴 전문가 1:1 모의면접 (60분)',
-                    '심층 피드백 리포트 제공',
-                    '후속 질문 Q&A 포함',
-                    '서비스 출시 후 즉시 적용',
-                  ].map((f) => (
-                    <li key={f} style={{ display: 'flex', gap: 10, alignItems: 'flex-start', padding: '6px 0', fontSize: 14, color: '#333', borderBottom: '1px solid #f5f5f5' }}>
-                      <span style={{ color: BLUE, fontWeight: 700, flexShrink: 0, marginTop: 1 }}>✓</span> {f}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: 24, alignItems: 'start' }}>
+            {[
+              {
+                tier: '무료 (Free)',
+                price: '0원',
+                sub: '영원히 무료',
+                features: ['채용 공고 애그리게이터', 'AI 모의면접 3회/월', '기본 피드백 리포트'],
+                highlight: false,
+              },
+              {
+                tier: '프로 (Pro)',
+                price: '월 9,900원',
+                sub: '학원 대비 1/10~1/30',
+                features: ['AI 모의면접 무제한', '기업·직무별 맞춤 시나리오', '음성 분석 리포트', '딥 피드백 (논리·압박 대응)'],
+                highlight: true,
+              },
+              {
+                tier: '멘토 매칭',
+                price: '건당 5~10만원',
+                sub: '컨설팅 대비 1/5~1/10',
+                features: ['현직자 1:1 모의면접', 'AI 진단 기반 전문가 연결', '실전 감각·업계 시각 피드백', '플랫폼 수수료 20%만'],
+                highlight: false,
+              },
+            ].map((plan) => (
+              <div
+                key={plan.tier}
+                style={{
+                  backgroundColor: plan.highlight ? BLUE : '#fff',
+                  borderRadius: 20,
+                  padding: 36,
+                  border: plan.highlight ? 'none' : '1px solid #e5e7eb',
+                  boxShadow: plan.highlight ? '0 8px 40px rgba(39,86,239,0.35)' : '0 2px 12px rgba(0,0,0,0.04)',
+                  position: 'relative',
+                }}
+              >
+                {plan.highlight && (
+                  <span style={{ position: 'absolute', top: -14, left: '50%', transform: 'translateX(-50%)', backgroundColor: '#FFD700', color: '#000', fontWeight: 800, fontSize: 12, padding: '4px 16px', borderRadius: 999, whiteSpace: 'nowrap' }}>
+                    가장 인기
+                  </span>
+                )}
+                <h3 style={{ color: plan.highlight ? '#fff' : '#1a1a2e', fontWeight: 800, fontSize: 18, marginBottom: 8 }}>{plan.tier}</h3>
+                <div style={{ color: plan.highlight ? '#fff' : BLUE, fontWeight: 900, fontSize: 30, marginBottom: 4 }}>{plan.price}</div>
+                <div style={{ color: plan.highlight ? 'rgba(255,255,255,0.7)' : '#999', fontSize: 13, marginBottom: 28 }}>{plan.sub}</div>
+                <ul style={{ listStyle: 'none', padding: 0, margin: '0 0 32px' }}>
+                  {plan.features.map((f) => (
+                    <li key={f} style={{ color: plan.highlight ? 'rgba(255,255,255,0.9)' : '#444', fontSize: 14, padding: '7px 0', borderBottom: `1px solid ${plan.highlight ? 'rgba(255,255,255,0.15)' : '#f0f0f0'}`, display: 'flex', gap: 10 }}>
+                      <span style={{ color: plan.highlight ? '#fff' : BLUE, fontWeight: 700, flexShrink: 0 }}>✓</span> {f}
                     </li>
                   ))}
                 </ul>
                 <Link href="/coupon">
-                  <button style={{ width: '100%', padding: '14px', borderRadius: 10, border: 'none', backgroundColor: BLUE, color: '#fff', fontWeight: 800, fontSize: 15, cursor: 'pointer', boxShadow: '0 4px 16px rgba(39,86,239,0.4)' }}>
+                  <button style={{
+                    width: '100%',
+                    padding: '14px',
+                    borderRadius: 10,
+                    border: plan.highlight ? '2px solid #fff' : `2px solid ${BLUE}`,
+                    backgroundColor: plan.highlight ? '#fff' : 'transparent',
+                    color: BLUE,
+                    fontWeight: 800,
+                    fontSize: 15,
+                    cursor: 'pointer',
+                  }}>
                     쿠폰 받기
                   </button>
                 </Link>
               </div>
-            </div>
-
-            {/* 쿠폰 2 */}
-            <div style={{ backgroundColor: '#fff', borderRadius: 20, overflow: 'hidden', boxShadow: '0 8px 40px rgba(39,86,239,0.15)', border: '2px solid #e5e9ff' }}>
-              <div style={{ backgroundColor: '#1E45D4', padding: '28px 28px 24px', position: 'relative' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                  <div>
-                    <span style={{ backgroundColor: 'rgba(255,255,255,0.2)', color: '#fff', fontSize: 11, fontWeight: 700, padding: '3px 10px', borderRadius: 4, letterSpacing: 0.5 }}>쿠폰 #2</span>
-                    <h3 style={{ color: '#fff', fontWeight: 900, fontSize: 22, marginTop: 10, lineHeight: 1.2 }}>패키지<br />할인 쿠폰</h3>
-                  </div>
-                  <div style={{ textAlign: 'right' }}>
-                    <div style={{ color: 'rgba(255,255,255,0.6)', fontSize: 12 }}>최대</div>
-                    <div style={{ color: '#FFD700', fontWeight: 900, fontSize: 32, lineHeight: 1 }}>20%</div>
-                    <div style={{ color: 'rgba(255,255,255,0.8)', fontSize: 12 }}>추가 할인</div>
-                  </div>
-                </div>
-                <div style={{ position: 'absolute', bottom: -1, left: 0, right: 0, height: 20, backgroundColor: '#fff' }}>
-                  <div style={{ position: 'absolute', top: -10, left: 20, width: 20, height: 20, borderRadius: '50%', backgroundColor: '#fff' }} />
-                  <div style={{ position: 'absolute', top: -10, right: 20, width: 20, height: 20, borderRadius: '50%', backgroundColor: '#fff' }} />
-                  <div style={{ borderTop: '2px dashed #c7d2fe', margin: '10px 40px 0' }} />
-                </div>
-              </div>
-              <div style={{ padding: '28px 28px 24px' }}>
-                <ul style={{ listStyle: 'none', padding: 0, margin: '0 0 24px' }}>
-                  {[
-                    '3회 패키지 구매 시 20% 추가 할인',
-                    '은퇴 전문가 1:1 모의면접 3회',
-                    '압박·심층 질문 특화 훈련',
-                    '2회차부터 10% 할인 자동 적용',
-                    '오프라인 대면 면접 옵션 선택 가능',
-                  ].map((f) => (
-                    <li key={f} style={{ display: 'flex', gap: 10, alignItems: 'flex-start', padding: '6px 0', fontSize: 14, color: '#333', borderBottom: '1px solid #f5f5f5' }}>
-                      <span style={{ color: '#1E45D4', fontWeight: 700, flexShrink: 0, marginTop: 1 }}>✓</span> {f}
-                    </li>
-                  ))}
-                </ul>
-                <Link href="/coupon">
-                  <button style={{ width: '100%', padding: '14px', borderRadius: 10, border: 'none', backgroundColor: '#1E45D4', color: '#fff', fontWeight: 800, fontSize: 15, cursor: 'pointer', boxShadow: '0 4px 16px rgba(30,69,212,0.4)' }}>
-                    쿠폰 받기
-                  </button>
-                </Link>
-              </div>
-            </div>
-
+            ))}
           </div>
         </div>
       </section>
@@ -311,8 +261,8 @@ export default function LandingPage() {
             얼리버드 쿠폰으로<br />지금 시작하세요
           </h2>
           <p style={{ color: 'rgba(255,255,255,0.8)', fontSize: 17, lineHeight: 1.7, marginBottom: 40 }}>
-            첫 컨설팅 세션 50% 할인 쿠폰을 지금 바로 받으세요.<br />
-            서비스 출시 즉시 적용되며, 얼리버드 혜택은 선착순입니다.
+            Pro 구독 3개월 무료 + 이후 50% 할인<br />
+            첫 전문가 매칭 20% 할인 쿠폰을 지금 바로 받으세요.
           </p>
           <Link href="/coupon">
             <button style={{
@@ -338,10 +288,9 @@ export default function LandingPage() {
       {/* FOOTER */}
       <footer style={{ backgroundColor: '#0f1523', padding: '48px 24px', textAlign: 'center' }}>
         <div style={{ color: '#fff', fontWeight: 800, fontSize: 20, marginBottom: 12 }}>FitView</div>
-        <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: 14 }}>은퇴 전문가 1:1 면접 컨설팅 서비스 · KHUGLE 팀</p>
+        <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: 14 }}>맞춤형 면접 역량 강화 서비스 · KHUGLE 팀</p>
         <p style={{ color: 'rgba(255,255,255,0.25)', fontSize: 12, marginTop: 16 }}>© 2026 FitView. All rights reserved.</p>
       </footer>
-      </div>
     </div>
   )
 }
