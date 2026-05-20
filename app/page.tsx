@@ -5,6 +5,10 @@ import Link from 'next/link'
 
 const BLUE = '#2756EF'
 
+function trackCouponClick() {
+  fetch('/api/track?event=coupon_click').catch(() => {})
+}
+
 export default function LandingPage() {
   useEffect(() => {
     fetch('/api/track?event=visit').catch(() => {})
@@ -16,7 +20,7 @@ export default function LandingPage() {
       <nav style={{ backgroundColor: BLUE, position: 'sticky', top: 0, zIndex: 50 }}>
         <div style={{ maxWidth: 1100, margin: '0 auto', padding: '0 24px', height: 64, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <span style={{ color: '#fff', fontWeight: 800, fontSize: 22, letterSpacing: '-0.5px' }}>FitView</span>
-          <Link href="/coupon">
+          <Link href="/coupon" onClick={trackCouponClick}>
             <button style={{ backgroundColor: '#fff', color: BLUE, fontWeight: 700, fontSize: 14, padding: '10px 20px', borderRadius: 8, border: 'none', cursor: 'pointer' }}>
               얼리버드 쿠폰 받기
             </button>
@@ -38,7 +42,7 @@ export default function LandingPage() {
             학원 대비 1/10 가격으로 실전 역량을 완성하세요.
           </p>
           <div style={{ display: 'flex', gap: 16, justifyContent: 'center', flexWrap: 'wrap' }}>
-            <Link href="/coupon">
+            <Link href="/coupon" onClick={trackCouponClick}>
               <button style={{ backgroundColor: '#fff', color: BLUE, fontWeight: 800, fontSize: 16, padding: '16px 36px', borderRadius: 10, border: 'none', cursor: 'pointer', boxShadow: '0 4px 20px rgba(0,0,0,0.2)' }}>
                 얼리버드 쿠폰 받기 →
               </button>
@@ -233,7 +237,7 @@ export default function LandingPage() {
                     </li>
                   ))}
                 </ul>
-                <Link href="/coupon">
+                <Link href="/coupon" onClick={trackCouponClick}>
                   <button style={{
                     width: '100%',
                     padding: '14px',
@@ -264,7 +268,7 @@ export default function LandingPage() {
             Pro 구독 3개월 무료 + 이후 50% 할인<br />
             첫 전문가 매칭 20% 할인 쿠폰을 지금 바로 받으세요.
           </p>
-          <Link href="/coupon">
+          <Link href="/coupon" onClick={trackCouponClick}>
             <button style={{
               backgroundColor: '#fff',
               color: BLUE,
