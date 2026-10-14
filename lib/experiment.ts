@@ -8,7 +8,9 @@ export type ExperimentEvent = { event: string; source: string; campaign: string;
 export type Application = { id: string; requestId: string; createdAt: string; ownership: string; houseType: string; region: string; lastVisit: string; purpose: string; currentMethod: string; frequency: string; priceIntent: string; offeredPrice?: number; offerVersion?: string; priceConfirmed?: boolean; contact: string; consent: true; interviewConsent: boolean; source: string; campaign: string; variant: string }
 export type Coupon = { code: string; applicationId: string; requestId: string; issuedAt: string; expiresAt: string; discount: number; offeredPrice: number }
 type Store = { events: ExperimentEvent[]; applications: Application[]; coupons: Coupon[] }
-const redis = process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN ? Redis.fromEnv() : null
+const redisUrl = process.env.UPSTASH_REDIS_REST_URL?.trim()
+const redisToken = process.env.UPSTASH_REDIS_REST_TOKEN?.trim()
+const redis = redisUrl && redisToken ? new Redis({ url: redisUrl, token: redisToken }) : null
 const prefix = 'jibon:pmf:v1'
 const directory = path.resolve(/* turbopackIgnore: true */ process.env.PMF_DATA_DIR || path.join(process.cwd(), '.data'))
 const file = path.join(directory, 'experiment.json')
@@ -20,6 +22,7 @@ function locked<T>(task: () => Promise<T>): Promise<T> {
   return next
 }
 function assertLocalStorage() {
+  if (Boolean(redisUrl) !== Boolean(redisToken)) throw new Error('STORAGE_NOT_CONFIGURED')
   if (process.env.NODE_ENV === 'production' && !process.env.PMF_DATA_DIR) throw new Error('STORAGE_NOT_CONFIGURED')
 }
 async function readLocal(): Promise<Store> {

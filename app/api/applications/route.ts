@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { choices, sameOrigin, saveApplication, textValue, type Application } from '@/lib/experiment'
+import { choices, sameOrigin, saveApplication, issueCoupon, textValue, type Application } from '@/lib/experiment'
 import { PILOT_OFFER, paidIntent } from '@/lib/offer'
 export const runtime = 'nodejs'
 export async function POST(request: NextRequest) {
@@ -17,7 +17,16 @@ export async function POST(request: NextRequest) {
     if (region.length < 2 || body.consent !== true || (!email && !phone) || !/^[0-9a-f-]{36}$/i.test(body.requestId || '')) return NextResponse.json({ error: '지역, 유효한 연락처와 필수 동의를 확인해주세요.' }, { status: 400 })
     const application: Application = { id: crypto.randomUUID(), requestId: body.requestId, createdAt: new Date().toISOString(), region, contact, consent: true, interviewConsent: body.interviewConsent === true, ownership: body.ownership, houseType: body.houseType, lastVisit: body.lastVisit, purpose: body.purpose, currentMethod: body.currentMethod, frequency: body.frequency, priceIntent: body.priceIntent, offeredPrice: PILOT_OFFER.monthlyPrice, offerVersion: PILOT_OFFER.version, priceConfirmed: body.priceIntent === paidIntent && body.priceConfirmed === true, source: textValue(body.source) || 'direct', campaign: textValue(body.campaign) || 'default', variant: textValue(body.variant) || 'default' }
     const saved = await saveApplication(application)
-    return NextResponse.json({ ok: true, id: saved.id }, { status: 201 })
+    if (saved.priceIntent === paidIntent && saved.priceConfirmed) {
+      try {
+        const coupon = await issueCoupon(saved.requestId, saved.id)
+        return NextResponse.json({ ok: true, id: saved.id, coupon: { code: coupon.code, expiresAt: coupon.expiresAt, discount: coupon.discount, offeredPrice: coupon.offeredPrice } }, { status: 201, headers: { 'Cache-Control': 'no-store' } })
+      } catch {
+        // The application is already durable; let the user retry only coupon issuance.
+        return NextResponse.json({ ok: true, id: saved.id, couponPending: true }, { status: 201, headers: { 'Cache-Control': 'no-store' } })
+      }
+    }
+    return NextResponse.json({ ok: true, id: saved.id }, { status: 201, headers: { 'Cache-Control': 'no-store' } })
   } catch (error) {
     const missing = error instanceof Error && error.message === 'STORAGE_NOT_CONFIGURED'
     return NextResponse.json({ error: missing ? '신청 접수를 준비 중입니다. 저장소 연결 후 다시 안내드릴게요.' : '신청을 저장하지 못했습니다. 잠시 후 다시 시도해주세요.' }, { status: 503 })
