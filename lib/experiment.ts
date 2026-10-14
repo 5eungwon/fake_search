@@ -1,11 +1,13 @@
 import { Redis } from '@upstash/redis'
 import { mkdir, readFile, writeFile, rename } from 'node:fs/promises'
 import path from 'node:path'
+import { PILOT_OFFER, paidIntent } from './offer'
 
 export const eventNames = ['landing_view', 'apply_click', 'report_view', 'form_start', 'form_step_complete'] as const
 export type ExperimentEvent = { event: string; source: string; campaign: string; variant: string; placement?: string; timestamp: string }
-export type Application = { id: string; requestId: string; createdAt: string; ownership: string; houseType: string; region: string; lastVisit: string; purpose: string; currentMethod: string; frequency: string; priceIntent: string; contact: string; consent: true; interviewConsent: boolean; source: string; campaign: string; variant: string }
-type Store = { events: ExperimentEvent[]; applications: Application[] }
+export type Application = { id: string; requestId: string; createdAt: string; ownership: string; houseType: string; region: string; lastVisit: string; purpose: string; currentMethod: string; frequency: string; priceIntent: string; offeredPrice?: number; offerVersion?: string; priceConfirmed?: boolean; contact: string; consent: true; interviewConsent: boolean; source: string; campaign: string; variant: string }
+export type Coupon = { code: string; applicationId: string; requestId: string; issuedAt: string; expiresAt: string; discount: number; offeredPrice: number }
+type Store = { events: ExperimentEvent[]; applications: Application[]; coupons: Coupon[] }
 const redis = process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN ? Redis.fromEnv() : null
 const prefix = 'jibon:pmf:v1'
 const directory = path.resolve(/* turbopackIgnore: true */ process.env.PMF_DATA_DIR || path.join(process.cwd(), '.data'))
@@ -22,8 +24,8 @@ function assertLocalStorage() {
 }
 async function readLocal(): Promise<Store> {
   assertLocalStorage()
-  try { return JSON.parse(await readFile(file, 'utf8')) }
-  catch (error) { if ((error as NodeJS.ErrnoException).code === 'ENOENT') return { events: [], applications: [] }; throw error }
+  try { const data = JSON.parse(await readFile(file, 'utf8')); return { ...data, coupons: (data.coupons || []).filter((c: Coupon) => c.expiresAt > new Date().toISOString()) } }
+  catch (error) { if ((error as NodeJS.ErrnoException).code === 'ENOENT') return { events: [], applications: [], coupons: [] }; throw error }
 }
 async function writeLocal(store: Store) {
   await mkdir(directory, { recursive: true, mode: 0o700 })
@@ -62,11 +64,12 @@ export async function readExperiment(): Promise<Store> {
     const min = Date.now() - 90 * 86400000
     await Promise.all([redis.zremrangebyscore(`${prefix}:events`, '-inf', min), redis.zremrangebyscore(`${prefix}:applications`, '-inf', min)])
     const [eventIds, applicationIds] = await Promise.all([redis.zrange<string[]>(`${prefix}:events`, 0, -1), redis.zrange<string[]>(`${prefix}:applications`, 0, -1)])
-    const [events, applications] = await Promise.all([
+    const [events, applications, coupons] = await Promise.all([
       Promise.all(eventIds.map(id => redis.get<ExperimentEvent>(`${prefix}:event:${id}`))),
-      Promise.all(applicationIds.map(id => redis.get<Application>(`${prefix}:application:${id}`)))
+      Promise.all(applicationIds.map(id => redis.get<Application>(`${prefix}:application:${id}`))),
+      Promise.all(applicationIds.map(id => redis.get<Coupon>(`${prefix}:coupon:${id}`)))
     ])
-    return { events: events.filter((e): e is ExperimentEvent => !!e), applications: applications.filter((a): a is Application => !!a) }
+    return { events: events.filter((e): e is ExperimentEvent => !!e), applications: applications.filter((a): a is Application => !!a), coupons: coupons.filter((c): c is Coupon => !!c) }
   }
   return locked(async () => { const store = await readLocal(); store.applications = store.applications.filter(a => a.createdAt > cutoff()); store.events = store.events.filter(e => e.timestamp > cutoff()); await writeLocal(store); return store })
 }
@@ -85,4 +88,35 @@ export function sameOrigin(request: Request) {
   if (!origin) return true
   try { return new URL(origin).host === (request.headers.get('host') || new URL(request.url).host) }
   catch { return false }
+}
+
+export async function issueCoupon(requestId: string, applicationId: string): Promise<Coupon> {
+  function validate(application: Application | null | undefined) {
+    if (!application || application.id !== applicationId) throw new Error('RESERVATION_NOT_FOUND')
+    if (application.priceIntent !== paidIntent || application.priceConfirmed !== true || application.offeredPrice !== PILOT_OFFER.monthlyPrice) throw new Error('NOT_A_PAID_RESERVATION')
+    const expiresAt = new Date(new Date(application.createdAt).getTime() + PILOT_OFFER.couponValidityDays * 86400000).toISOString()
+    if (expiresAt <= new Date().toISOString()) throw new Error('COUPON_EXPIRED')
+    return { application, expiresAt }
+  }
+  function makeCoupon(application: Application, expiresAt: string): Coupon {
+    return { code: `JIBON-${crypto.randomUUID().replace(/-/g, '').slice(0, 16).toUpperCase()}`, applicationId: application.id, requestId, issuedAt: new Date().toISOString(), expiresAt, discount: PILOT_OFFER.firstPaymentDiscount, offeredPrice: application.offeredPrice! }
+  }
+  if (redis) {
+    const { application, expiresAt } = validate(await redis.get<Application>(`${prefix}:application:${requestId}`))
+    const key = `${prefix}:coupon:${requestId}`
+    const coupon = makeCoupon(application, expiresAt)
+    const saved = await redis.set(key, coupon, { nx: true, ex: Math.max(1, Math.floor((new Date(expiresAt).getTime() - Date.now()) / 1000)) })
+    const result = saved ? coupon : await redis.get<Coupon>(key)
+    if (!result) throw new Error('SAVE_FAILED')
+    return result
+  }
+  return locked(async () => {
+    const store = await readLocal()
+    const { application, expiresAt } = validate(store.applications.find(a => a.requestId === requestId))
+    const existing = store.coupons.find(c => c.applicationId === applicationId)
+    if (existing) return existing
+    const coupon = makeCoupon(application, expiresAt)
+    store.coupons.push(coupon); await writeLocal(store)
+    return coupon
+  })
 }
