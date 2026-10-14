@@ -14,3 +14,9 @@ next.user-config.*
 node_modules
 .next/
 .DS_Store
+# PMF experiment data and local tooling
+.data/
+.env
+.env.*
+!.env.example
+*.tsbuildinfo
