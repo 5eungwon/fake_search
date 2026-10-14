@@ -1,19 +1,13 @@
 'use client'
 
-import { FormEvent, useEffect, useRef, useState } from 'react'
-import { ArrowUpRight, ArrowRight, Check, ChevronDown, House, MapPin, Camera, CalendarDays, ShieldCheck, DoorOpen, Trees, ScanLine, X, CheckCircle2, LoaderCircle, Menu, Clock3, FileCheck2, Ticket } from 'lucide-react'
+import { useEffect, useState } from 'react'
+import { useRouter } from 'next/navigation'
+import { ArrowUpRight, ArrowRight, Check, ChevronDown, House, MapPin, Camera, CalendarDays, ShieldCheck, DoorOpen, Trees, ScanLine, X, CheckCircle2, Menu, Clock3, FileCheck2 } from 'lucide-react'
 
-import { PILOT_OFFER, priceLabel, discountLabel, firstPaymentLabel, paidIntent } from '@/lib/offer'
+import { track } from '@/lib/client-tracking'
 
-type IssuedCoupon = { code: string; expiresAt: string }
+import { PILOT_OFFER, priceLabel, discountLabel, firstPaymentLabel } from '@/lib/offer'
 
-function attribution() {
-  const params = new URLSearchParams(window.location.search)
-  return { source: params.get('utm_source') || 'direct', campaign: params.get('utm_campaign') || 'default', variant: params.get('utm_content') || 'default' }
-}
-function track(event: string, placement?: string) {
-  fetch('/api/track', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ event, placement, ...attribution() }), keepalive: true }).catch(() => {})
-}
 const reportItems = [
   { name: '대문 · 현관', status: '특이사항 없음', text: '대문이 닫혀 있고, 현관 주변에 눈에 띄는 변화가 없습니다.', icon: DoorOpen, tone: 'good' },
   { name: '마당 · 진입로', status: '이상 발견', text: '진입로에 나뭇가지가 떨어져 있습니다. 사진으로 위치를 확인해주세요.', icon: Trees, tone: 'warning' },
@@ -29,66 +23,20 @@ const faqs = [
 ]
 
 export default function Home() {
-  const [formOpen, setFormOpen] = useState(false)
+  const router = useRouter()
   const [mobileMenu, setMobileMenu] = useState(false)
   const [report, setReport] = useState(0)
-  const [step, setStep] = useState(1)
-  const [sending, setSending] = useState(false)
-  const [complete, setComplete] = useState(false)
-  const [error, setError] = useState('')
-  const [requestId, setRequestId] = useState('')
-  const [applicationId, setApplicationId] = useState('')
-  const [started, setStarted] = useState(false)
-  const [coupon, setCoupon] = useState<IssuedCoupon | null>(null)
-  const [couponLoading, setCouponLoading] = useState(false)
-  const [couponError, setCouponError] = useState('')
-  const [fields, setFields] = useState({ ownership: '', houseType: '', region: '', lastVisit: '', purpose: '', currentMethod: '', frequency: '월 1회', priceIntent: '', priceConfirmed: false, contact: '', consent: false, interviewConsent: false, website: '' })
-  const dialogRef = useRef<HTMLDialogElement>(null)
-  const previousFocus = useRef<HTMLElement | null>(null)
   useEffect(() => { track('landing_view') }, [])
-  useEffect(() => {
-    if (formOpen) {
-      previousFocus.current = document.activeElement as HTMLElement
-      dialogRef.current?.showModal()
-      const before = document.body.style.overflow
-      document.body.style.overflow = 'hidden'
-      return () => { document.body.style.overflow = before; previousFocus.current?.focus() }
+  function openSurvey(placement: string) {
+    track('survey_entry_click', placement)
+    const query = new URLSearchParams()
+    const incoming = new URLSearchParams(window.location.search)
+    for (const key of ['utm_source', 'utm_campaign', 'utm_content', 'utm_medium', 'utm_term']) {
+      const value = incoming.get(key)
+      if (value) query.set(key, value)
     }
-    dialogRef.current?.close()
-  }, [formOpen])
-  function openForm(placement: string) {
-    track('apply_click', placement)
-    setRequestId(current => current || crypto.randomUUID())
-    setMobileMenu(false)
-    setFormOpen(true)
+    router.push('/survey' + (query.size ? '?' + query.toString() : ''))
   }
-  function update(name: string, value: string | boolean) {
-    if (!started) { track('form_start'); setStarted(true) }
-    setFields(current => ({ ...current, [name]: value }))
-  }
-  async function submit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault()
-    if (step === 1) { track('form_step_complete'); setStep(2); dialogRef.current?.querySelector<HTMLElement>('select')?.focus(); return }
-    setSending(true); setError('')
-    try {
-      const response = await fetch('/api/applications', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ...fields, requestId, offerVersion: PILOT_OFFER.version, ...attribution() }) })
-      const result = await response.json()
-      if (!response.ok) throw new Error(result.error || '신청을 저장하지 못했습니다. 잠시 후 다시 시도해주세요.')
-      setApplicationId(result.id); setCoupon(result.coupon || null); setCouponError(result.couponPending ? '신청은 저장됐지만 쿠폰 발급을 완료하지 못했습니다. 아래 버튼으로 다시 받아주세요.' : ''); setComplete(true)
-    } catch (err) { setError(err instanceof Error ? err.message : '연결을 확인하고 다시 시도해주세요.') }
-    finally { setSending(false) }
-  }
-  async function claimCoupon() {
-    setCouponLoading(true); setCouponError('')
-    try {
-      const response = await fetch('/api/coupons', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ requestId, applicationId }) })
-      const result = await response.json()
-      if (!response.ok) throw new Error(result.error || '쿠폰을 발급하지 못했습니다. 다시 시도해주세요.')
-      setCoupon(result.coupon)
-    } catch (err) { setCouponError(err instanceof Error ? err.message : '연결을 확인하고 다시 시도해주세요.') }
-    finally { setCouponLoading(false) }
-  }
-  const isPaidReservation = fields.priceIntent === paidIntent && fields.priceConfirmed
   const activeReport = reportItems[report]
   return (
     <>
@@ -98,17 +46,17 @@ export default function Home() {
           <nav className={mobileMenu ? 'nav-links mobile-open' : 'nav-links'} aria-label="주 메뉴">
             <a href="#service" onClick={() => setMobileMenu(false)}>서비스 소개</a><a href="#report" onClick={() => setMobileMenu(false)}>점검 리포트</a><a href="#pricing" onClick={() => setMobileMenu(false)}>이용 요금</a><a href="#faq" onClick={() => setMobileMenu(false)}>자주 묻는 질문</a>
           </nav>
-          <div className="nav-actions"><button className="button button-small" onClick={() => openForm('header')}>사전 신청 <ArrowUpRight size={16} /></button><button className="menu-button" onClick={() => setMobileMenu(!mobileMenu)} aria-label="메뉴 열기" aria-expanded={mobileMenu}>{mobileMenu ? <X /> : <Menu />}</button></div>
+          <div className="nav-actions"><button className="button button-small" onClick={() => openSurvey('header')}>설문조사 참여하기 <ArrowUpRight size={16} /></button><button className="menu-button" onClick={() => setMobileMenu(!mobileMenu)} aria-label="메뉴 열기" aria-expanded={mobileMenu}>{mobileMenu ? <X /> : <Menu />}</button></div>
         </div>
       </header>
       <main>
         <section className="hero container">
           <div className="hero-copy">
             <span className="eyebrow pill"><span className="status-dot" /> 현재 개발 중 · 사전 신청 접수</span>
-            <h1>우리 집은 멀리 있어도,<br /><span>안심은 가까이.</span></h1>
-            <p className="hero-description">시골집, 주말주택, 부모님이 남겨주신 집.<br />가까운 이웃이 대신 살펴보는 집온을 개발하고 있습니다.<br />월 {priceLabel}원 서비스에 사전 신청하면<br className="desktop-break" /> 첫 이용 {discountLabel}원 할인 쿠폰을 드려요.</p>
-            <div className="hero-buttons"><button className="button" onClick={() => openForm('hero')}>사전 신청하고 1,000원 쿠폰 받기 <ArrowUpRight size={19} /></button><a className="text-link" href="#report" onClick={() => track('report_view', 'hero')}>어떤 리포트를 받나요? <ArrowRight size={17} /></a></div>
-            <p className="hero-note"><Check size={15} /> 월 1회 {priceLabel}원 <span>·</span> 운영 시작 후 조건 확인·결제</p>
+            <h1>멀리 있는 우리 집,<br /><span>어떻게 관리하고 계신가요?</span></h1>
+            <p className="hero-description">상속받은 시골집, 빈집, 주말주택.<br />현재 관리 방법과 최근에 관리를 미룬 경험을 들려주세요.<br />여러분의 실제 경험을 바탕으로 집온을 준비하고 있습니다.</p>
+            <div className="hero-buttons"><button className="button" onClick={() => openSurvey('hero')}>설문조사 참여하기 <ArrowUpRight size={19} /></button><a className="text-link" href="#report" onClick={() => track('report_view', 'hero')}>어떤 리포트를 받나요? <ArrowRight size={17} /></a></div>
+            <p className="hero-note"><Check size={15} /> 최대 4개 질문 <span>·</span> 약 1분 <span>·</span> 설문에 연락처 입력 없음</p>
             <div className="hero-bottom"><span>집까지 가지 않아도,</span><strong>약속한 확인은 이루어지도록.</strong><div className="small-line" /></div>
           </div>
           <div className="hero-visual">
@@ -136,43 +84,15 @@ export default function Home() {
 
         <section className="section container how-section"><div className="section-heading centered"><span className="eyebrow">HOW IT WORKS</span><h2>사전 신청부터 출시 후 점검까지.</h2><p>출시 후, 우리 집에 필요한 확인부터 함께 정합니다.</p></div><div className="steps">{[{ icon: MapPin, title: '지역과 주택 정보 남기기', text: '관리 중인 주택의 시·군과\n필요한 점검 주기를 알려주세요.' }, { icon: CalendarDays, title: '가능 지역 · 방문 범위 확인', text: '점검자를 연결할 수 있는지 확인하고,\n방문 범위와 최종 요금을 합의합니다.' }, { icon: Camera, title: '방문 후 리포트 받기', text: '합의한 외부 구역을 방문하고,\n사진과 관찰 결과를 전달합니다.' }].map((item, index) => <article key={item.title}><div className="step-icon"><item.icon size={26} /><span>0{index + 1}</span></div><h3>{item.title}</h3><p>{item.text}</p>{index < 2 && <ArrowRight className="step-arrow" size={23} />}</article>)}</div><div className="scope-note"><ShieldCheck size={20} /><p>초기에는 <strong>실내 출입과 열쇠 보관 없이, 승인된 외부 구역만</strong> 확인해요.<br className="mobile-break" /> 실시간 감시 · 긴급 출동 · 청소 · 수리는 포함되지 않습니다.</p></div></section>
 
-        <section className="pricing-section" id="pricing"><div className="container pricing-layout"><div><span className="eyebrow">A SMALL VISIT, A LITTLE PEACE</span><h2>한 달에 한 번,<br />우리 집 안부를 받아보세요.</h2><p>먼 길을 떠나기 전, 집의 상태부터 확인할 수 있도록.<br />현재 서비스를 개발하고 있습니다.<br />사전 신청 시 첫 이용 {discountLabel}원 할인 쿠폰을 드립니다.</p><span className="pilot-tag"><span className="status-dot" /> 현재 개발 중 · 사전 신청 모집</span></div><div className="price-card"><div className="price-top"><span>외부 점검 시범 서비스</span><span>출시 예정 요금</span></div><div className="price">{priceLabel}<span>원 / 월</span></div><p className="price-caption">월 1회 외부 점검 기준 · 서비스 개발 중</p><ul><li><Check /> 대문·현관, 창문·외벽, 마당·진입로 확인</li><li><Check /> 사전 합의한 위치의 사진과 관찰 결과</li><li><Check /> 방문 기록과 항목별 상태 리포트</li></ul><button className="button" onClick={() => openForm('pricing')}>사전 신청하고 1,000원 쿠폰 받기 <ArrowUpRight size={18} /></button><p className="price-disclaimer">지금 결제되지 않습니다. 운영 시작 후 최종 조건을 확인하고<br />동의한 경우에만 결제합니다. 자동 결제는 없습니다.</p></div></div></section>
+        <section className="pricing-section" id="pricing"><div className="container pricing-layout"><div><span className="eyebrow">A SMALL VISIT, A LITTLE PEACE</span><h2>한 달에 한 번,<br />우리 집 안부를 받아보세요.</h2><p>먼 길을 떠나기 전, 집의 상태부터 확인할 수 있도록.<br />현재 서비스를 개발하고 있습니다.<br />사전 신청 시 첫 이용 {discountLabel}원 할인 쿠폰을 드립니다.</p><span className="pilot-tag"><span className="status-dot" /> 현재 개발 중 · 사전 신청 모집</span></div><div className="price-card"><div className="price-top"><span>외부 점검 시범 서비스</span><span>출시 예정 요금</span></div><div className="price">{priceLabel}<span>원 / 월</span></div><p className="price-caption">월 1회 외부 점검 기준 · 서비스 개발 중</p><ul><li><Check /> 대문·현관, 창문·외벽, 마당·진입로 확인</li><li><Check /> 사전 합의한 위치의 사진과 관찰 결과</li><li><Check /> 방문 기록과 항목별 상태 리포트</li></ul><button className="button" onClick={() => openSurvey('pricing')}>설문조사 참여하기 <ArrowUpRight size={18} /></button><p className="price-disclaimer">지금 결제되지 않습니다. 운영 시작 후 최종 조건을 확인하고<br />동의한 경우에만 결제합니다. 자동 결제는 없습니다.</p></div></div></section>
 
         <section className="section container faq-section" id="faq"><div className="section-heading"><span className="eyebrow">GOOD TO KNOW</span><h2>예약 전에 궁금한 것들.</h2><p>처음 맡기는 일이니까, 충분히 알고 결정하세요.</p></div><div className="faq-list">{faqs.map(([question, answer]) => <details key={question}><summary>{question}<ChevronDown size={19} /></summary><p>{answer}</p></details>)}</div></section>
-        <section className="final-cta container"><div className="cta-house"><House size={35} strokeWidth={1.5} /></div><span className="eyebrow">멀리 있어도, 마음은 그 집에.</span><h2>다음 확인은, 집온과 함께.</h2><p>현재 개발 중인 집온에 사전 신청하고, 첫 이용 {discountLabel}원 할인 쿠폰을 받아두세요.</p><button className="button" onClick={() => openForm('bottom')}>사전 신청하고 1,000원 쿠폰 받기 <ArrowUpRight size={18} /></button><span className="final-note">약 2분 소요 · 출시 후 조건 확인·결제</span></section>
+        <section className="final-cta container"><div className="cta-house"><House size={35} strokeWidth={1.5} /></div><span className="eyebrow">멀리 있어도, 마음은 그 집에.</span><h2>다음 확인은, 집온과 함께.</h2><p>현재 개발 중인 집온에 사전 신청하고, 첫 이용 {discountLabel}원 할인 쿠폰을 받아두세요.</p><button className="button" onClick={() => openSurvey('bottom')}>설문조사 참여하기 <ArrowUpRight size={18} /></button><span className="final-note">약 2분 소요 · 출시 후 조건 확인·결제</span></section>
       </main>
       <footer className="footer container"><a className="logo" href="#"><House size={23} /><span>집온<span className="logo-dot">.</span></span></a><p>집의 안부를 전하는, 가까운 연결.</p><span>© {new Date().getFullYear()} 집온 · 서비스 개발 중</span></footer>
-      <div className="mobile-cta"><div><strong>월 1회 {priceLabel}원</strong><span>개발 중 · 신청 시 1,000원 쿠폰</span></div><button className="button button-small" onClick={() => openForm('mobile_sticky')}>사전 신청 <ArrowUpRight size={16} /></button></div>
+      <div className="mobile-cta"><div><strong>월 1회 {priceLabel}원</strong><span>개발 중 · 신청 시 1,000원 쿠폰</span></div><button className="button button-small" onClick={() => openSurvey('mobile_sticky')}>설문조사 참여하기 <ArrowUpRight size={16} /></button></div>
 
-      <dialog ref={dialogRef} className="application-dialog" onCancel={() => setFormOpen(false)} onClick={event => { if (event.target === event.currentTarget) setFormOpen(false) }} aria-labelledby="application-title">
-        <div className="dialog-content"><button className="close-button" aria-label="예약창 닫기" onClick={() => setFormOpen(false)}><X size={22} /></button>
-          {complete ? <div className="success-content"><span className="success-icon"><CheckCircle2 size={36} /></span><span className="eyebrow">{isPaidReservation ? 'RESERVATION RECEIVED' : 'THANK YOU FOR YOUR FEEDBACK'}</span><h2 id="application-title">{isPaidReservation ? '사전 신청을 받았어요.' : '이용 의견을 잘 받았어요.'}</h2><p>아직 서비스 개발 중입니다.<br />출시 후 해당 지역에서 점검이 가능한 경우 연락드리겠습니다.</p><div className="success-summary"><strong>{isPaidReservation ? '월 1회 외부 점검 · ' + priceLabel + '원 이용 의향 확인' : '남겨주신 의견은 서비스 준비에 참고하겠습니다.'}</strong><p>현재 결제된 금액은 0원입니다. 운영 시작 후 최종 조건을 확인하고 진행 여부를 결정하세요.</p><span>접수 번호 {applicationId.slice(0, 8).toUpperCase()}</span></div>
-            {isPaidReservation && <div className="coupon-card"><div className="coupon-heading"><Ticket size={22} /><strong>사전 신청 첫 이용 할인 쿠폰</strong></div><p>첫 결제 <strong>{discountLabel}원 할인</strong><br />기본 요금 기준 첫 결제 {firstPaymentLabel}원 · 이후 월 {priceLabel}원</p>{coupon ? <div className="issued-coupon" role="status"><span>쿠폰 발급 완료 · 코드를 보관해주세요</span><strong>{coupon.code}</strong><span>유효기간: {new Date(coupon.expiresAt).toLocaleDateString('ko-KR', { timeZone: 'Asia/Seoul' })}까지</span></div> : <button type="button" className="button coupon-button" disabled={couponLoading} onClick={claimCoupon}>{couponLoading ? <><LoaderCircle className="spin" size={17} /> 발급 중</> : <>쿠폰 발급 다시 시도 <Ticket size={17} /></>}</button>}<p className="coupon-terms">예약 접수일부터 {PILOT_OFFER.couponValidityDays}일 · 첫 결제 1회 · 다른 할인과 중복 불가.<br />점검 가능 지역에 한해 적용하며, 이용 안내에 쿠폰 코드를 알려주세요.<br />쿠폰을 받는 것만으로 결제되거나 방문이 확정되지는 않습니다.</p>{couponError && <p className="form-error" role="alert">{couponError}</p>}</div>}
-            <button className="button" onClick={() => setFormOpen(false)}>확인했어요 <Check size={18} /></button></div> : <><span className="eyebrow">PRE-LAUNCH APPLICATION</span><h2 id="application-title">우리 집의 안부를 맡겨볼까요?</h2><p className="dialog-intro">월 1회 {priceLabel}원의 유료 시범 서비스입니다.<br />현재 개발 중입니다. 사전 신청하면 {discountLabel}원 할인 쿠폰을 드려요.<br />서비스 출시 후 최종 조건을 확인하고 결제하세요.</p><div className="form-progress"><span className={step === 1 ? 'current' : 'done'}>01 우리 집 이야기</span><span className={step === 2 ? 'current' : ''}>02 이용 조건과 연락처</span></div>
-          <form onSubmit={submit}>
-            {step === 1 ? <div className="form-fields">
-              <label>현재 주택을 관리하고 계신가요? <span>*</span><select required value={fields.ownership} onChange={e => update('ownership', e.target.value)}><option value="">선택해주세요</option><option>소유자이며 직접 관리하고 있어요</option><option>가족 소유 주택을 관리하고 있어요</option><option>아직 관리 중인 주택은 없어요</option></select></label>
-              <div className="form-row"><label>주택 유형 <span>*</span><select required value={fields.houseType} onChange={e => update('houseType', e.target.value)}><option value="">선택해주세요</option><option>상속받은 시골집</option><option>주말주택 / 세컨드하우스</option><option>비워둔 단독주택</option><option>기타 주택</option></select></label><label>관리 지역 (시·군) <span>*</span><input required minLength={2} maxLength={60} placeholder="예: 충북 옥천군" value={fields.region} onChange={e => update('region', e.target.value)} /></label></div>
-              <p className="field-help">정확한 주소나 집을 비우는 일정은 입력하지 마세요.</p>
-              <label>마지막으로 방문한 시기 <span>*</span><select required value={fields.lastVisit} onChange={e => update('lastVisit', e.target.value)}><option value="">선택해주세요</option><option>1개월 이내</option><option>1~3개월 전</option><option>3~6개월 전</option><option>6개월 이상 전</option><option>아직 방문한 적 없어요</option></select></label>
-              <label>최근 방문의 가장 큰 목적은 무엇이었나요? <span>*</span><select required value={fields.purpose} onChange={e => update('purpose', e.target.value)}><option value="">실제 최근 경험을 골라주세요</option><option>집의 외부 상태 확인</option><option>실내 상태 / 누수 확인</option><option>청소 / 수리 / 제초</option><option>휴식 / 가족 방문</option><option>기타 / 방문한 적 없음</option></select></label>
-              <label>지금은 집 상태를 어떻게 확인하시나요? <span>*</span><select required value={fields.currentMethod} onChange={e => update('currentMethod', e.target.value)}><option value="">선택해주세요</option><option>직접 방문</option><option>이웃 / 지인에게 부탁</option><option>CCTV / 원격 장비</option><option>관리인 / 기존 서비스</option><option>별도로 확인하지 않음</option></select></label>
-              <button className="button form-submit" type="submit">다음: 이용 조건 확인 <ArrowRight size={18} /></button>
-            </div> : <div className="form-fields"><div className="form-price"><House size={24} /><div><strong>월 1회 외부 점검 · {priceLabel}원</strong><span>실내 출입·청소·수리 제외 / 최종 조건은 별도 안내</span></div></div>
-              <label>희망 점검 주기 <span>*</span><select required value={fields.frequency} onChange={e => update('frequency', e.target.value)}><option>월 1회</option><option>월 2회</option><option>필요할 때 1회</option><option>상담 후 결정</option></select></label>
-              <label>위 시범 요금으로 이용할 의향이 있으신가요? <span>*</span><select required value={fields.priceIntent} onChange={e => update('priceIntent', e.target.value)}><option value="">솔직한 의견을 알려주세요</option><option>조건이 맞으면 유료로 이용하고 싶어요</option><option>리포트를 더 확인한 후 결정하고 싶어요</option><option>가격이 부담돼요</option><option>외부 점검만으로는 부족해요</option><option>지역 주민의 방문이 걱정돼요</option><option>지금은 필요하지 않아요</option></select></label>
-              {fields.priceIntent === paidIntent && <label className="checkbox-label price-confirmation"><input type="checkbox" required checked={fields.priceConfirmed} onChange={e => update('priceConfirmed', e.target.checked)} /><span>[필수] 월 1회 외부 점검을 {priceLabel}원에 이용할 의향이 있습니다. 운영 시작 후 최종 조건을 확인하고 결제하는 데 동의합니다.</span></label>}
-              <label>안내받을 연락처 <span>*</span><input required maxLength={100} autoComplete="email" placeholder="휴대폰 번호 또는 이메일" value={fields.contact} onChange={e => update('contact', e.target.value)} /></label>
-              <div className="privacy-notice"><strong>개인정보 수집·이용 안내</strong><p>수집 항목: 연락처, 주택·관리 경험, 이용 의향·요금 확인, 유입 경로, 쿠폰 발급 기록.<br />목적: 시범 운영 가능 여부 확인과 참여 안내.<br />보유 기간: 접수일로부터 90일 후 삭제. 동의를 거부할 수 있으며, 거부 시 신청이 어렵습니다. 철회는 시범 운영 안내 연락에 회신해주세요.</p></div>
-              <label className="checkbox-label"><input type="checkbox" required checked={fields.consent} onChange={e => update('consent', e.target.checked)} /><span>[필수] 개인정보 수집·이용에 동의합니다.</span></label>
-              <label className="checkbox-label"><input type="checkbox" checked={fields.interviewConsent} onChange={e => update('interviewConsent', e.target.checked)} /><span>[선택] 주택 관리 경험 인터뷰 연락에도 동의합니다.</span></label>
-              <div className="honeypot" aria-hidden="true"><label>Website<input tabIndex={-1} autoComplete="off" value={fields.website} onChange={e => update('website', e.target.value)} /></label></div>
-              {error && <p className="form-error" role="alert">{error}</p>}
-              <div className="form-actions"><button type="button" className="back-button" disabled={sending} onClick={() => setStep(1)}>이전</button><button className="button" disabled={sending} type="submit">{sending ? <><LoaderCircle className="spin" size={18} /> 접수 중</> : <>{fields.priceIntent === paidIntent ? '사전 신청하고 쿠폰 받기' : '이용 의견 남기기'} <ArrowUpRight size={18} /></>}</button></div><p className="form-note">지금 결제되지 않습니다. 운영 시작 후 조건을 확인하고 결제합니다.</p>
-            </div>}
-          </form></>}
-        </div>
-      </dialog>
+
     </>
   )
 }

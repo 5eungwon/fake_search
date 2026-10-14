@@ -2,12 +2,13 @@ import { Redis } from '@upstash/redis'
 import { mkdir, readFile, writeFile, rename } from 'node:fs/promises'
 import path from 'node:path'
 import { PILOT_OFFER, paidIntent } from './offer'
+import type { SurveyResponse } from './survey'
 
-export const eventNames = ['landing_view', 'apply_click', 'report_view', 'form_start', 'form_step_complete'] as const
+export const eventNames = ['landing_view', 'apply_click', 'report_view', 'form_start', 'form_step_complete', 'survey_start', 'survey_offer_click', 'survey_entry_click', 'survey_view'] as const
 export type ExperimentEvent = { event: string; source: string; campaign: string; variant: string; placement?: string; timestamp: string }
-export type Application = { id: string; requestId: string; createdAt: string; ownership: string; houseType: string; region: string; lastVisit: string; purpose: string; currentMethod: string; frequency: string; priceIntent: string; offeredPrice?: number; offerVersion?: string; priceConfirmed?: boolean; contact: string; consent: true; interviewConsent: boolean; source: string; campaign: string; variant: string }
+export type Application = { id: string; requestId: string; createdAt: string; ownership?: string; houseType?: string; region: string; lastVisit?: string; purpose?: string; currentMethod?: string; frequency?: string; surveyId?: string; priceIntent: string; offeredPrice?: number; offerVersion?: string; priceConfirmed?: boolean; contact: string; consent: true; interviewConsent: boolean; source: string; campaign: string; variant: string }
 export type Coupon = { code: string; applicationId: string; requestId: string; issuedAt: string; expiresAt: string; discount: number; offeredPrice: number }
-type Store = { events: ExperimentEvent[]; applications: Application[]; coupons: Coupon[] }
+type Store = { events: ExperimentEvent[]; applications: Application[]; coupons: Coupon[]; surveys: SurveyResponse[] }
 const redisUrl = process.env.UPSTASH_REDIS_REST_URL?.trim()
 const redisToken = process.env.UPSTASH_REDIS_REST_TOKEN?.trim()
 const redis = redisUrl && redisToken ? new Redis({ url: redisUrl, token: redisToken }) : null
@@ -27,8 +28,8 @@ function assertLocalStorage() {
 }
 async function readLocal(): Promise<Store> {
   assertLocalStorage()
-  try { const data = JSON.parse(await readFile(file, 'utf8')); return { ...data, coupons: (data.coupons || []).filter((c: Coupon) => c.expiresAt > new Date().toISOString()) } }
-  catch (error) { if ((error as NodeJS.ErrnoException).code === 'ENOENT') return { events: [], applications: [], coupons: [] }; throw error }
+  try { const data = JSON.parse(await readFile(file, 'utf8')); return { ...data, surveys: (data.surveys || []).filter((s: SurveyResponse) => s.createdAt > cutoff()), coupons: (data.coupons || []).filter((c: Coupon) => c.expiresAt > new Date().toISOString()) } }
+  catch (error) { if ((error as NodeJS.ErrnoException).code === 'ENOENT') return { events: [], applications: [], coupons: [], surveys: [] }; throw error }
 }
 async function writeLocal(store: Store) {
   await mkdir(directory, { recursive: true, mode: 0o700 })
@@ -66,13 +67,15 @@ export async function readExperiment(): Promise<Store> {
   if (redis) {
     const min = Date.now() - 90 * 86400000
     await Promise.all([redis.zremrangebyscore(`${prefix}:events`, '-inf', min), redis.zremrangebyscore(`${prefix}:applications`, '-inf', min)])
-    const [eventIds, applicationIds] = await Promise.all([redis.zrange<string[]>(`${prefix}:events`, 0, -1), redis.zrange<string[]>(`${prefix}:applications`, 0, -1)])
-    const [events, applications, coupons] = await Promise.all([
+    await redis.zremrangebyscore(`${prefix}:surveys`, '-inf', min)
+    const [eventIds, applicationIds, surveyIds] = await Promise.all([redis.zrange<string[]>(`${prefix}:events`, 0, -1), redis.zrange<string[]>(`${prefix}:applications`, 0, -1), redis.zrange<string[]>(`${prefix}:surveys`, 0, -1)])
+    const [events, applications, coupons, surveys] = await Promise.all([
       Promise.all(eventIds.map(id => redis.get<ExperimentEvent>(`${prefix}:event:${id}`))),
       Promise.all(applicationIds.map(id => redis.get<Application>(`${prefix}:application:${id}`))),
-      Promise.all(applicationIds.map(id => redis.get<Coupon>(`${prefix}:coupon:${id}`)))
+      Promise.all(applicationIds.map(id => redis.get<Coupon>(`${prefix}:coupon:${id}`))),
+      Promise.all(surveyIds.map(id => redis.get<SurveyResponse>(`${prefix}:survey:${id}`)))
     ])
-    return { events: events.filter((e): e is ExperimentEvent => !!e), applications: applications.filter((a): a is Application => !!a), coupons: coupons.filter((c): c is Coupon => !!c) }
+    return { events: events.filter((e): e is ExperimentEvent => !!e), applications: applications.filter((a): a is Application => !!a), coupons: coupons.filter((c): c is Coupon => !!c), surveys: surveys.filter((s): s is SurveyResponse => !!s) }
   }
   return locked(async () => { const store = await readLocal(); store.applications = store.applications.filter(a => a.createdAt > cutoff()); store.events = store.events.filter(e => e.timestamp > cutoff()); await writeLocal(store); return store })
 }
@@ -122,4 +125,25 @@ export async function issueCoupon(requestId: string, applicationId: string): Pro
     store.coupons.push(coupon); await writeLocal(store)
     return coupon
   })
+}
+
+export async function saveSurvey(survey: SurveyResponse): Promise<SurveyResponse> {
+  if (redis) {
+    const key = `${prefix}:survey:${survey.requestId}`
+    const saved = await redis.set(key, survey, { nx: true, ex: 90 * 86400 })
+    const result = saved ? survey : await redis.get<SurveyResponse>(key)
+    if (!result) throw new Error('SAVE_FAILED')
+    await redis.zadd(`${prefix}:surveys`, { score: new Date(result.createdAt).getTime(), member: survey.requestId })
+    return result
+  }
+  return locked(async () => {
+    const store = await readLocal()
+    const existing = store.surveys.find(s => s.requestId === survey.requestId)
+    if (existing) return existing
+    store.surveys.push(survey); await writeLocal(store); return survey
+  })
+}
+export async function getSurvey(requestId: string): Promise<SurveyResponse | null> {
+  if (redis) return redis.get<SurveyResponse>(`${prefix}:survey:${requestId}`)
+  return locked(async () => (await readLocal()).surveys.find(s => s.requestId === requestId) || null)
 }
