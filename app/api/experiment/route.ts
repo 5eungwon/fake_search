@@ -40,7 +40,7 @@ export async function GET(request: NextRequest) {
         const keys = ['id','createdAt',...surveyKeys,'source','campaign','variant'] as const
         rows = [[...keys,'coreTarget','applicationCompleted'].join(','), ...surveys.map(s => [...keys.map(key => csvCell(s[key])), csvCell(isCoreTarget(s)), csvCell(applications.some(a => a.surveyId === s.id && a.priceConfirmed && a.priceIntent === paidIntent))].join(','))]
       } else {
-        const keys = ['id','createdAt','surveyId','ownership','houseType','region','lastVisit','purpose','currentMethod','frequency','priceIntent','offeredPrice','offerVersion','priceConfirmed','contact','interviewConsent','source','campaign','variant'] as const
+        const keys = ['id','createdAt','surveyId','ownership','houseType','region','lastVisit','purpose','currentMethod','frequency','priceIntent','offeredPrice','billingUnit','offerVersion','priceConfirmed','contact','interviewConsent','source','campaign','variant'] as const
         rows = [[...keys,...surveyKeys,'couponCode','couponDiscount','couponIssuedAt','couponExpiresAt'].join(','), ...applications.map(a => {
           const coupon = coupons.find(c => c.applicationId === a.id), survey = a.surveyId ? surveysById.get(a.surveyId) : undefined
           return [...keys.map(key => csvCell(a[key])), ...surveyKeys.map(key => csvCell(survey?.[key])), ...[coupon?.code,coupon?.discount,coupon?.issuedAt,coupon?.expiresAt].map(csvCell)].join(',')

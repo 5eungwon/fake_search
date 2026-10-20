@@ -18,8 +18,8 @@ const faqs = [
   ['집 안도 확인해주나요?', '초기 시범 점검은 소유자와 합의한 외부 구역만 확인합니다. 실내 출입과 열쇠 보관은 하지 않으며, 청소·수리·제초 등의 작업은 기본 점검에 포함되지 않습니다.'],
   ['누가 방문하고, 어떻게 확인하나요?', '시범 운영에서는 본인과 활동 지역 확인 및 기본 안내를 거친 지역 주민을 연결할 계획입니다. 소유자의 관리 권한과 출입 허용 범위를 먼저 확인하고, 지정 위치의 사진·방문 시각·관찰 결과를 검수하는 방식으로 운영합니다.'],
   ['이상이 발견되면 바로 처리해주나요?', '발견한 상태를 사진과 관찰 내용으로 전달합니다. 실시간 감시나 긴급 출동, 문제 예방을 보장하는 서비스는 아닙니다. 점검자는 위험 상황에 직접 개입하지 않으며, 필요한 조치는 소유자가 판단합니다.'],
-  ['예약하면 바로 결제되나요?', `아니요. 월 1회 외부 점검 ${priceLabel}원의 유료 시범 이용을 예약하는 단계입니다. 아직 서비스 개발과 운영 준비 중이며, 운영 시작 후 방문 가능 지역과 최종 조건을 확인하고 동의한 경우에만 별도로 결제합니다. 자동 결제나 자동 구독은 없습니다.`],
-  ['첫 이용 쿠폰은 어떻게 사용하나요?', `월 ${priceLabel}원의 유료 이용 의향을 확인하고 사전 신청을 완료하면 첫 이용 ${discountLabel}원 할인 쿠폰이 자동 발급됩니다. 완료 화면에서 고유 코드를 확인해주세요. 기본 요금 기준 첫 결제는 ${firstPaymentLabel}원, 이후에는 월 ${priceLabel}원입니다. 예약 접수일부터 ${PILOT_OFFER.couponValidityDays}일 동안, 점검 가능한 지역에서 첫 결제에 한 번 사용하며 다른 할인과 중복되지 않습니다. 운영팀의 이용 안내에 쿠폰 코드를 알려주세요. 쿠폰 발급은 실제 결제가 아닙니다.`],
+  ['예약하면 바로 결제되나요?', `아니요. 외부 점검 1회 ${priceLabel}원의 유료 시범 이용을 예약하는 단계입니다. 아직 서비스 개발과 운영 준비 중이며, 운영 시작 후 방문 가능 지역과 최종 조건을 확인하고 동의한 경우에만 별도로 결제합니다. 자동 결제나 자동 구독은 없습니다.`],
+  ['첫 이용 쿠폰은 어떻게 사용하나요?', `회당 ${priceLabel}원의 유료 이용 의향을 확인하고 사전 신청을 완료하면 첫 이용 ${discountLabel}원 할인 쿠폰이 자동 발급됩니다. 완료 화면에서 고유 코드를 확인해주세요. 기본 요금 기준 첫 점검은 ${firstPaymentLabel}원, 이후에는 회당 ${priceLabel}원입니다. 예약 접수일부터 ${PILOT_OFFER.couponValidityDays}일 동안, 점검 가능한 지역에서 첫 결제에 한 번 사용하며 다른 할인과 중복되지 않습니다. 운영팀의 이용 안내에 쿠폰 코드를 알려주세요. 쿠폰 발급은 실제 결제가 아닙니다.`],
 ]
 
 export default function Home() {
@@ -37,6 +37,17 @@ export default function Home() {
     }
     router.push('/survey' + (query.size ? '?' + query.toString() : ''))
   }
+  function openDemo(placement: string, screen = 'request') {
+    track('demo_entry_click', placement)
+    const query = new URLSearchParams()
+    const incoming = new URLSearchParams(window.location.search)
+    for (const key of ['utm_source', 'utm_campaign', 'utm_content', 'utm_medium', 'utm_term']) {
+      const value = incoming.get(key)
+      if (value) query.set(key, value)
+    }
+    query.set('screen', screen)
+    router.push('/demo?' + query.toString())
+  }
   const activeReport = reportItems[report]
   return (
     <>
@@ -44,7 +55,7 @@ export default function Home() {
         <div className="container nav-row">
           <a className="logo" href="#" aria-label="집온 홈"><House size={27} strokeWidth={2.2} /><span>집온<span className="logo-dot">.</span></span></a>
           <nav className={mobileMenu ? 'nav-links mobile-open' : 'nav-links'} aria-label="주 메뉴">
-            <a href="#service" onClick={() => setMobileMenu(false)}>서비스 소개</a><a href="#report" onClick={() => setMobileMenu(false)}>점검 리포트</a><a href="#pricing" onClick={() => setMobileMenu(false)}>이용 요금</a><a href="#faq" onClick={() => setMobileMenu(false)}>자주 묻는 질문</a>
+            <button type="button" onClick={() => { setMobileMenu(false); openDemo('navigation') }}>서비스 체험</button><a href="#service" onClick={() => setMobileMenu(false)}>서비스 소개</a><a href="#report" onClick={() => setMobileMenu(false)}>점검 리포트</a><a href="#pricing" onClick={() => setMobileMenu(false)}>이용 요금</a><a href="#faq" onClick={() => setMobileMenu(false)}>자주 묻는 질문</a>
           </nav>
           <div className="nav-actions"><button className="button button-small" onClick={() => openSurvey('header')}>설문조사 참여하기 <ArrowUpRight size={16} /></button><button className="menu-button" onClick={() => setMobileMenu(!mobileMenu)} aria-label="메뉴 열기" aria-expanded={mobileMenu}>{mobileMenu ? <X /> : <Menu />}</button></div>
         </div>
@@ -55,7 +66,7 @@ export default function Home() {
             <span className="eyebrow pill"><span className="status-dot" /> 현재 개발 중 · 사전 신청 접수</span>
             <h1>멀리 있는 우리 집,<br /><span>어떻게 관리하고 계신가요?</span></h1>
             <p className="hero-description">상속받은 시골집, 빈집, 주말주택.<br />현재 관리 방법과 최근에 관리를 미룬 경험을 들려주세요.<br />여러분의 실제 경험을 바탕으로 집온을 준비하고 있습니다.</p>
-            <div className="hero-buttons"><button className="button" onClick={() => openSurvey('hero')}>설문조사 참여하기 <ArrowUpRight size={19} /></button><a className="text-link" href="#report" onClick={() => track('report_view', 'hero')}>어떤 리포트를 받나요? <ArrowRight size={17} /></a></div>
+            <div className="hero-buttons"><button className="button" onClick={() => openSurvey('hero')}>설문조사 참여하기 <ArrowUpRight size={19} /></button><button type="button" className="button demo-outline-button" onClick={() => openDemo('hero')}>점검 화면 체험하기 <ArrowRight size={17} /></button><a className="text-link" href="#report" onClick={() => track('report_view', 'hero')}>어떤 리포트를 받나요? <ArrowRight size={17} /></a></div>
             <p className="hero-note"><Check size={15} /> 최대 4개 질문 <span>·</span> 약 1분 <span>·</span> 설문에 연락처 입력 없음</p>
             <div className="hero-bottom"><span>집까지 가지 않아도,</span><strong>약속한 확인은 이루어지도록.</strong><div className="small-line" /></div>
           </div>
@@ -67,6 +78,8 @@ export default function Home() {
           </div>
         </section>
         <div className="trust-strip"><div className="container trust-items"><span><MapPin /> 가까운 지역 주민의 방문</span><span><Camera /> 지정 구역 사진과 관찰 결과</span><span><ShieldCheck /> 합의한 외부 구역만 확인</span></div></div>
+
+        <section className="section container demo-showcase" id="demo"><div className="section-heading"><span className="eyebrow">EXPERIENCE THE SERVICE</span><h2>요청부터 결과까지,<br />우리 집 점검을 미리 체험해보세요.</h2><p>실제 방문이나 결제 없이, 서비스 이용 화면을 직접 살펴볼 수 있어요.</p></div><div className="demo-showcase-cards">{[{ screen: 'request', number: '01', title: '점검 요청하기', detail: '희망 날짜와 확인할 구역을 선택해요.', icon: CalendarDays, image: '/images/country-home.jpg' }, { screen: 'progress', number: '02', title: '점검 진행 중', detail: '접수부터 현장 점검까지 진행 상태를 확인해요.', icon: Clock3, image: '/images/report-entrance.webp' }, { screen: 'result', number: '03', title: '점검 결과 확인', detail: '위치별 사진과 관찰 내용을 확인해요.', icon: FileCheck2, image: '/images/report-yard.webp' }].map(item => <button type="button" key={item.screen} onClick={() => openDemo('showcase_' + item.screen, item.screen)}><div className="demo-showcase-image"><img src={item.image} alt="" loading="lazy" /><span>체험 화면 · SAMPLE</span></div><div className="demo-showcase-content"><span>{item.number} / <item.icon size={15} /></span><h3>{item.title} <ArrowUpRight size={19} /></h3><p>{item.detail}</p></div></button>)}</div></section>
 
         <section className="section container problem-section" id="service">
           <div className="section-heading"><span className="eyebrow">A LITTLE CLOSER TO HOME</span><h2>집이 멀어질수록,<br />작은 확인도 큰 일이 되니까.</h2><p>그저 잘 있는지 알고 싶은데, 매번 직접 가기는 어렵죠.</p></div>
@@ -84,13 +97,13 @@ export default function Home() {
 
         <section className="section container how-section"><div className="section-heading centered"><span className="eyebrow">HOW IT WORKS</span><h2>사전 신청부터 출시 후 점검까지.</h2><p>출시 후, 우리 집에 필요한 확인부터 함께 정합니다.</p></div><div className="steps">{[{ icon: MapPin, title: '지역과 주택 정보 남기기', text: '관리 중인 주택의 시·군과\n필요한 점검 주기를 알려주세요.' }, { icon: CalendarDays, title: '가능 지역 · 방문 범위 확인', text: '점검자를 연결할 수 있는지 확인하고,\n방문 범위와 최종 요금을 합의합니다.' }, { icon: Camera, title: '방문 후 리포트 받기', text: '합의한 외부 구역을 방문하고,\n사진과 관찰 결과를 전달합니다.' }].map((item, index) => <article key={item.title}><div className="step-icon"><item.icon size={26} /><span>0{index + 1}</span></div><h3>{item.title}</h3><p>{item.text}</p>{index < 2 && <ArrowRight className="step-arrow" size={23} />}</article>)}</div><div className="scope-note"><ShieldCheck size={20} /><p>초기에는 <strong>실내 출입과 열쇠 보관 없이, 승인된 외부 구역만</strong> 확인해요.<br className="mobile-break" /> 실시간 감시 · 긴급 출동 · 청소 · 수리는 포함되지 않습니다.</p></div></section>
 
-        <section className="pricing-section" id="pricing"><div className="container pricing-layout"><div><span className="eyebrow">A SMALL VISIT, A LITTLE PEACE</span><h2>한 달에 한 번,<br />우리 집 안부를 받아보세요.</h2><p>먼 길을 떠나기 전, 집의 상태부터 확인할 수 있도록.<br />현재 서비스를 개발하고 있습니다.<br />사전 신청 시 첫 이용 {discountLabel}원 할인 쿠폰을 드립니다.</p><span className="pilot-tag"><span className="status-dot" /> 현재 개발 중 · 사전 신청 모집</span></div><div className="price-card"><div className="price-top"><span>외부 점검 시범 서비스</span><span>출시 예정 요금</span></div><div className="price">{priceLabel}<span>원 / 월</span></div><p className="price-caption">월 1회 외부 점검 기준 · 서비스 개발 중</p><ul><li><Check /> 대문·현관, 창문·외벽, 마당·진입로 확인</li><li><Check /> 사전 합의한 위치의 사진과 관찰 결과</li><li><Check /> 방문 기록과 항목별 상태 리포트</li></ul><button className="button" onClick={() => openSurvey('pricing')}>설문조사 참여하기 <ArrowUpRight size={18} /></button><p className="price-disclaimer">지금 결제되지 않습니다. 운영 시작 후 최종 조건을 확인하고<br />동의한 경우에만 결제합니다. 자동 결제는 없습니다.</p></div></div></section>
+        <section className="pricing-section" id="pricing"><div className="container pricing-layout"><div><span className="eyebrow">A SMALL VISIT, A LITTLE PEACE</span><h2>확인이 필요할 때,<br />우리 집 안부를 받아보세요.</h2><p>먼 길을 떠나기 전, 집의 상태부터 확인할 수 있도록.<br />현재 서비스를 개발하고 있습니다.<br />사전 신청 시 첫 이용 {discountLabel}원 할인 쿠폰을 드립니다.</p><span className="pilot-tag"><span className="status-dot" /> 현재 개발 중 · 사전 신청 모집</span></div><div className="price-card"><div className="price-top"><span>외부 점검 시범 서비스</span><span>출시 예정 요금</span></div><div className="price">{priceLabel}<span>원 / 회</span></div><p className="price-caption">외부 점검 1회 기준 · 서비스 개발 중</p><ul><li><Check /> 대문·현관, 창문·외벽, 마당·진입로 확인</li><li><Check /> 사전 합의한 위치의 사진과 관찰 결과</li><li><Check /> 방문 기록과 항목별 상태 리포트</li></ul><button className="button" onClick={() => openSurvey('pricing')}>설문조사 참여하기 <ArrowUpRight size={18} /></button><p className="price-disclaimer">지금 결제되지 않습니다. 운영 시작 후 최종 조건을 확인하고<br />동의한 경우에만 결제합니다. 자동 결제는 없습니다.</p></div></div></section>
 
         <section className="section container faq-section" id="faq"><div className="section-heading"><span className="eyebrow">GOOD TO KNOW</span><h2>예약 전에 궁금한 것들.</h2><p>처음 맡기는 일이니까, 충분히 알고 결정하세요.</p></div><div className="faq-list">{faqs.map(([question, answer]) => <details key={question}><summary>{question}<ChevronDown size={19} /></summary><p>{answer}</p></details>)}</div></section>
         <section className="final-cta container"><div className="cta-house"><House size={35} strokeWidth={1.5} /></div><span className="eyebrow">멀리 있어도, 마음은 그 집에.</span><h2>다음 확인은, 집온과 함께.</h2><p>현재 개발 중인 집온에 사전 신청하고, 첫 이용 {discountLabel}원 할인 쿠폰을 받아두세요.</p><button className="button" onClick={() => openSurvey('bottom')}>설문조사 참여하기 <ArrowUpRight size={18} /></button><span className="final-note">약 2분 소요 · 출시 후 조건 확인·결제</span></section>
       </main>
       <footer className="footer container"><a className="logo" href="#"><House size={23} /><span>집온<span className="logo-dot">.</span></span></a><p>집의 안부를 전하는, 가까운 연결.</p><span>© {new Date().getFullYear()} 집온 · 서비스 개발 중</span></footer>
-      <div className="mobile-cta"><div><strong>월 1회 {priceLabel}원</strong><span>개발 중 · 신청 시 1,000원 쿠폰</span></div><button className="button button-small" onClick={() => openSurvey('mobile_sticky')}>설문조사 참여하기 <ArrowUpRight size={16} /></button></div>
+      <div className="mobile-cta"><div><strong>1회 {priceLabel}원</strong><span>개발 중 · 신청 시 1,000원 쿠폰</span></div><button className="button button-small" onClick={() => openSurvey('mobile_sticky')}>설문조사 참여하기 <ArrowUpRight size={16} /></button></div>
 
 
     </>

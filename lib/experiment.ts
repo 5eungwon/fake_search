@@ -4,10 +4,10 @@ import path from 'node:path'
 import { PILOT_OFFER, paidIntent } from './offer'
 import type { SurveyResponse } from './survey'
 
-export const eventNames = ['landing_view', 'apply_click', 'report_view', 'form_start', 'form_step_complete', 'survey_start', 'survey_offer_click', 'survey_entry_click', 'survey_view'] as const
+export const eventNames = ['landing_view', 'apply_click', 'report_view', 'form_start', 'form_step_complete', 'survey_start', 'survey_offer_click', 'survey_entry_click', 'survey_view', 'demo_entry_click', 'demo_view', 'demo_request', 'demo_progress', 'demo_result'] as const
 export type ExperimentEvent = { event: string; source: string; campaign: string; variant: string; placement?: string; timestamp: string }
-export type Application = { id: string; requestId: string; createdAt: string; ownership?: string; houseType?: string; region: string; lastVisit?: string; purpose?: string; currentMethod?: string; frequency?: string; surveyId?: string; priceIntent: string; offeredPrice?: number; offerVersion?: string; priceConfirmed?: boolean; contact: string; consent: true; interviewConsent: boolean; source: string; campaign: string; variant: string }
-export type Coupon = { code: string; applicationId: string; requestId: string; issuedAt: string; expiresAt: string; discount: number; offeredPrice: number }
+export type Application = { id: string; requestId: string; createdAt: string; ownership?: string; houseType?: string; region: string; lastVisit?: string; purpose?: string; currentMethod?: string; frequency?: string; surveyId?: string; priceIntent: string; offeredPrice?: number; billingUnit?: 'per_visit' | 'monthly'; offerVersion?: string; priceConfirmed?: boolean; contact: string; consent: true; interviewConsent: boolean; source: string; campaign: string; variant: string }
+export type Coupon = { code: string; applicationId: string; requestId: string; issuedAt: string; expiresAt: string; discount: number; offeredPrice: number; billingUnit?: 'per_visit' | 'monthly' }
 type Store = { events: ExperimentEvent[]; applications: Application[]; coupons: Coupon[]; surveys: SurveyResponse[] }
 const redisUrl = process.env.UPSTASH_REDIS_REST_URL?.trim()
 const redisToken = process.env.UPSTASH_REDIS_REST_TOKEN?.trim()
@@ -99,13 +99,13 @@ export function sameOrigin(request: Request) {
 export async function issueCoupon(requestId: string, applicationId: string): Promise<Coupon> {
   function validate(application: Application | null | undefined) {
     if (!application || application.id !== applicationId) throw new Error('RESERVATION_NOT_FOUND')
-    if (application.priceIntent !== paidIntent || application.priceConfirmed !== true || application.offeredPrice !== PILOT_OFFER.monthlyPrice) throw new Error('NOT_A_PAID_RESERVATION')
+    if (application.priceIntent !== paidIntent || application.priceConfirmed !== true || application.offeredPrice !== PILOT_OFFER.unitPrice) throw new Error('NOT_A_PAID_RESERVATION')
     const expiresAt = new Date(new Date(application.createdAt).getTime() + PILOT_OFFER.couponValidityDays * 86400000).toISOString()
     if (expiresAt <= new Date().toISOString()) throw new Error('COUPON_EXPIRED')
     return { application, expiresAt }
   }
   function makeCoupon(application: Application, expiresAt: string): Coupon {
-    return { code: `JIBON-${crypto.randomUUID().replace(/-/g, '').slice(0, 16).toUpperCase()}`, applicationId: application.id, requestId, issuedAt: new Date().toISOString(), expiresAt, discount: PILOT_OFFER.firstPaymentDiscount, offeredPrice: application.offeredPrice! }
+    return { code: `JIBON-${crypto.randomUUID().replace(/-/g, '').slice(0, 16).toUpperCase()}`, applicationId: application.id, requestId, issuedAt: new Date().toISOString(), expiresAt, discount: PILOT_OFFER.firstPaymentDiscount, offeredPrice: application.offeredPrice!, billingUnit: application.billingUnit }
   }
   if (redis) {
     const { application, expiresAt } = validate(await redis.get<Application>(`${prefix}:application:${requestId}`))
